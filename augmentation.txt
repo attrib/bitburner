@@ -1,0 +1,34 @@
+# BEFORE INSTALL
+
+sell all stocks ?
+stop all scripts ?
+upgrade home computer
+
+# AFTER INSTALL
+
+buy tor
+
+run /scripts/contracts.js
+
+run /ccc/ccc.js
+
+run /scripts/buyBestServer.js --money=0.5 # falls 50% noch irgendwas ist...
+
+# run /scripts/stock.js
+
+buy -l
+# buy BruteSSH.exe
+buy FTPCrack.exe
+buy relaySMTP.exe
+buy HTTPWorm.exe
+buy SQLInject.exe
+
+
+# Important backdoors
+
+home; connect hong-fang-tea; connect CSEC; backdoor
+home; connect hong-fang-tea; connect CSEC; connect silver-helix; connect netlink; connect I.I.I.I; backdoor
+home; connect harakiri-sushi; connect zer0; connect neo-net; connect avmnite-02h; backdoor
+home; connect hong-fang-tea; connect CSEC; connect silver-helix; connect crush-fitness; connect summit-uni; connect alpha-ent; connect global-pharm; connect omnia; connect icarus; connect zb-def; connect run4theh111z; backdoor
+home; connect hong-fang-tea; connect CSEC; connect silver-helix; connect crush-fitness; connect summit-uni; connect alpha-ent; connect global-pharm; connect omnia; connect icarus; connect infocomm; connect microdyne; connect stormtech; connect 4sigma; connect nwo; connect fulcrumassets; backdoor
+home; connect hong-fang-tea; connect CSEC; connect silver-helix; connect crush-fitness; connect summit-uni; connect alpha-ent; connect global-pharm; connect omnia; connect icarus; connect zb-def; connect applied-energetics; connect vitalife; connect kuai-gong; connect clarkinc; connect The-Cave; backdoor

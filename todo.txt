@@ -1,0 +1,6 @@
+* add missing contracts
+* ccc
+** HGWG script for hacking in parallel
+** hack/grow with stock, when we have a stock for it
+
+

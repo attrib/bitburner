@@ -1,0 +1,9 @@
+var host = 'n00dles';
+while(true) {
+  if (getServerMoneyAvailable(host) < 1500000) {
+    grow(host);
+  }
+  else {
+    hack(host);
+  }
+}
