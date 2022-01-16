@@ -47,6 +47,8 @@ export class CCC {
 			}
 			this.sortTargetServers()
 			const hwgwTargets = []
+			const hwgwActive = this.slaveServers.reduce((prev, slave) => prev + slave.ramMax, 0) > 1024
+			this.moreServersNeeded = 0
 			for (let targetServer of this.targetServers) {
 				if ((targetServer.securityDiff - targetServer.runningExecutions.weaken) > 1) {
 					this.execOnSlavesWeaken(targetServer, targetServer.securityDiff - targetServer.runningExecutions.weaken)
@@ -56,20 +58,7 @@ export class CCC {
 					this.execOnSlaves(targetServer, 'grow', threadsNeeded)
 					this.execOnSlavesWeaken(targetServer, NS.growthAnalyzeSecurity(threadsNeeded))
 				}
-				else if (targetServer.runningExecutions.weaken < 1 && targetServer.runningExecutions.grow < 1 && targetServer.runningExecutions.hack < 1) {
-					hwgwTargets.push(targetServer)
-				}
-			}
-
-			if (hwgwTargets.length > 0) {
-				hwgwTargets.sort((a, b) => b.maxMoney - a.maxMoney)
-				while (await this.hwgw(hwgwTargets.shift())) {
-					await NS.asleep(5) // get the ui a bit faster...
-				}
-			}
-
-			for (let targetServer of this.targetServers) {
-				if (targetServer.runningExecutions.weaken < 1 && targetServer.runningExecutions.grow < 1 && targetServer.runningExecutions.hack < 3 && targetServer.runningExecutions.hswg === 0) {
+				else if (!hwgwActive && targetServer.runningExecutions.weaken < 1 && targetServer.runningExecutions.grow < 1 && targetServer.runningExecutions.hack < 3) {
 					let threadsNeededHack = Math.ceil(NS.hackAnalyzeThreads(targetServer.host, targetServer.money * 0.3))
 					let threadsNeededGrow = Math.ceil(NS.growthAnalyze(targetServer.host, 1.45))
 
@@ -77,7 +66,32 @@ export class CCC {
 					this.execOnSlaves(targetServer, 'grow', threadsNeededGrow)
 					this.execOnSlavesWeaken(targetServer, NS.growthAnalyzeSecurity(threadsNeededGrow) + NS.hackAnalyzeSecurity(threadsNeededHack))
 				}
+				else if (targetServer.runningExecutions.weaken < 1 && targetServer.runningExecutions.grow < 1 && targetServer.runningExecutions.hack < 1) {
+					hwgwTargets.push(targetServer)
+				}
 			}
+
+			if (hwgwActive) {
+				if (hwgwTargets.length > 0) {
+					hwgwTargets.sort((a, b) => b.maxMoney - a.maxMoney)
+					while (await this.hwgw(hwgwTargets.shift())) {
+						await NS.asleep(5) // get the ui a bit faster...
+					}
+				}
+
+
+				for (let targetServer of this.targetServers) {
+					if (targetServer.runningExecutions.weaken < 1 && targetServer.runningExecutions.grow < 1 && targetServer.runningExecutions.hack < 3 && targetServer.runningExecutions.hswg === 0) {
+						let threadsNeededHack = Math.ceil(NS.hackAnalyzeThreads(targetServer.host, targetServer.money * 0.3))
+						let threadsNeededGrow = Math.ceil(NS.growthAnalyze(targetServer.host, 1.45))
+
+						this.execOnSlaves(targetServer, 'hack', threadsNeededHack)
+						this.execOnSlaves(targetServer, 'grow', threadsNeededGrow)
+						this.execOnSlavesWeaken(targetServer, NS.growthAnalyzeSecurity(threadsNeededGrow) + NS.hackAnalyzeSecurity(threadsNeededHack))
+					}
+				}
+			}
+
 
 			// reset hwgw counter
 			for (let targetServer of this.targetServers) {
@@ -92,6 +106,9 @@ export class CCC {
 			const sleepTime = Math.min(this.nextCommandEndTimestamp.length > 0 ? Math.max(1500, this.nextCommandEndTimestamp[0] - now) : 10000, 150000)
 			if (sleepTime > 60000) {
 				NS.print(`Next action in ${NS.tFormat(sleepTime)} (${this.nextCommandEndTimestamp.length > 0 ? NS.tFormat(this.nextCommandEndTimestamp[0] - now) : 'nothing executed?'})`)
+			}
+			if (this.moreServersNeeded > 0) {
+				NS.print(`More servers needed to run all commands, expected RAM ${this.moreServersNeeded.toFixed(2)} GB`)
 			}
 			this.runContracts()
 			await NS.asleep(sleepTime)
@@ -244,7 +261,7 @@ export class CCC {
 			serverExec.push(new Command(slave, targetServer, command, threadCount, weakenResult, 0))
 		}
 		if (securityDiff > 0) {
-			NS.print(`Target ${targetServer.host}: not enough servers to ${command}`)
+			// NS.print(`Target ${targetServer.host}: not enough servers to ${command}`)
 			this.moreServersNeeded += this.weakenThreadsNeeded({ cores: 1 }, securityDiff) * this.ramCommand['weaken']
 		}
 		this.execArrayOnSlaves(serverExec)
@@ -267,7 +284,7 @@ export class CCC {
 			serverExec.push(new Command(slave, targetServer, command, threadCount, threadCount, 0))
 		}
 		if (threadsNeeded > 1) {
-			NS.print(`Target ${targetServer.host}: not enough servers to ${command} `)
+			// NS.print(`Target ${targetServer.host}: not enough servers to ${command} `)
 			this.moreServersNeeded += this.ramCommand[command] * threadsNeeded
 		}
 
