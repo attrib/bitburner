@@ -17,7 +17,7 @@ export class CCC {
 	nextCommandEndTimestamp = []
 	moreServersNeeded = 0
 	hacknet
-	lastServerPurchased
+	lastServerPurchased = 0
 	nextContractsRun = 0
 
 	constructor() {
@@ -36,7 +36,7 @@ export class CCC {
 			let earning = Math.max(0, NS.getPlayer().money - this.currentMoney)
 			if (earning > 0) {
 				let serverBought = this.moreServersNeeded > 0 ? await this.buyServer(NS.getPlayer().money * 0.50) : false
-				let hacknetBought = serverBought ? false : this.hacknet.buyBestUpgrade(this.currentMoney < CCC.LOW_MONEY_THRESHHOLD ? this.currentMoney * 0.2 : earning * 0.20)
+				let hacknetBought = serverBought ? false : this.hacknet.buyBestUpgrade(this.currentMoney < CCC.LOW_MONEY_THRESHHOLD ? NS.getPlayer().money * 0.2 : earning * 0.20)
 				if (serverBought || hacknetBought) {
 					this.currentMoney = NS.getPlayer().money
 				}
@@ -72,6 +72,7 @@ export class CCC {
 			}
 
 			if (hwgwActive) {
+				const serversNeeded = this.moreServersNeeded
 				if (hwgwTargets.length > 0) {
 					hwgwTargets.sort((a, b) => b.maxMoney - a.maxMoney)
 					while (await this.hwgw(hwgwTargets.shift())) {
@@ -90,6 +91,7 @@ export class CCC {
 						this.execOnSlavesWeaken(targetServer, NS.growthAnalyzeSecurity(threadsNeededGrow) + NS.hackAnalyzeSecurity(threadsNeededHack))
 					}
 				}
+				this.moreServersNeeded = serversNeeded // do not count hwgw as more servers needed
 			}
 
 
@@ -146,7 +148,7 @@ export class CCC {
 			if (!alreadyAdded) {
 				this.moreServersNeeded = 0
 				await this.addHost(host)
-				this.lastServerPurchased = new Date()
+				this.lastServerPurchased = Date.now()
 			}
 		}
 		// if (nextUnlocks.length > 0) {
@@ -334,9 +336,7 @@ export class CCC {
 		const servers = NS.getPurchasedServers()
 
 		// Only buy servers every 10m
-		const now10minAgo = new Date()
-		now10minAgo.setMinutes(now10minAgo.getMinutes() - 10)
-		if (this.lastServerPurchased && now10minAgo < this.lastServerPurchased) {
+		if (this.lastServerPurchased + 10 * 60 < Date.now()) {
 			return false
 		}
 
@@ -353,7 +353,7 @@ export class CCC {
 			}
 			await this.addHost(`slave-${servers.length}`)
 			this.moreServersNeeded = 0
-			this.lastServerPurchased = new Date()
+			this.lastServerPurchased = Date.now()
 			return true
 		}
 		if (servers.length === limit) {
@@ -441,6 +441,9 @@ export async function main(_ns) {
 	})
 	if (!NS.scriptRunning('/script/stock.js', 'home')) {
 		NS.exec('/scripts/stock.js', 'home', 1);
+	}
+	if (!NS.scriptRunning('/script/gang.js', 'home')) {
+		NS.exec('/scripts/gang.js', 'home', 1);
 	}
 	await ccc.process()
 }
